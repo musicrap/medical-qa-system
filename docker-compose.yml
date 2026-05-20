@@ -1,0 +1,43 @@
+﻿version: "3.9"
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: medical-qa-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - ./data:/data
+      - chroma_data:/app/chroma_db
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_API_BASE=${OPENAI_API_BASE:-https://api.openai.com/v1}
+      - LLM_MODEL=${LLM_MODEL:-gpt-4o-mini}
+      - USE_LOCAL_EMBEDDING=${USE_LOCAL_EMBEDDING:-true}
+    restart: unless-stopped
+    networks:
+      - medical-qa-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: medical-qa-frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+    networks:
+      - medical-qa-network
+
+
+volumes:
+  chroma_data:
+
+networks:
+  medical-qa-network:
+    driver: bridge
+
